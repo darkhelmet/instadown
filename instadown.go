@@ -11,15 +11,17 @@ import (
     "path/filepath"
     "strings"
     "sync"
+    "sync/atomic"
 )
 
 const Likes = "/api.instagram.com/v1/users/self/media/liked"
 
 var (
-    endpoint = flag.String("endpoint", "https://foauth.org", "The foauth endpoint to use")
-    output   = flag.String("out", "Instadown", "The directory to put things in")
-    email    = flag.String("email", "", "Email to authenticate foauth with")
-    password = flag.String("password", "", "Password to authenticate foauth with")
+    endpoint       = flag.String("endpoint", "https://foauth.org", "The foauth endpoint to use")
+    output         = flag.String("out", "Instadown", "The directory to put things in")
+    email          = flag.String("email", "", "Email to authenticate foauth with")
+    password       = flag.String("password", "", "Password to authenticate foauth with")
+    count    int32 = 0
 )
 
 type PaginationInfo struct {
@@ -69,6 +71,7 @@ func downloadFile(url string) {
     defer resp.Body.Close()
 
     io.Copy(file, resp.Body)
+    atomic.AddInt32(&count, 1)
 }
 
 func downloader(urls chan string, wg *sync.WaitGroup) {
@@ -132,4 +135,7 @@ func downloadLikes() {
 func main() {
     flag.Parse()
     downloadLikes()
+    if count > 0 {
+        fmt.Printf("Downloaded %d new likes", count)
+    }
 }

@@ -36,6 +36,10 @@ type Images struct {
     StandardResolution Resolution `json:"standard_resolution"`
 }
 
+type Videos struct {
+    StandardResolution Resolution `json:"standard_resolution"`
+}
+
 type Caption struct {
     Text string `json:"text"`
 }
@@ -43,6 +47,7 @@ type Caption struct {
 type Like struct {
     Tags   []string `json:"tags"`
     Images Images   `json:"images"`
+    Videos Videos   `json:"videos"`
 }
 
 type Response struct {
@@ -51,6 +56,10 @@ type Response struct {
 }
 
 func downloadFile(url string) {
+    if url == "" {
+        return
+    }
+
     parts := strings.Split(url, "/")
     filename, err := filepath.Abs(filepath.Join(*output, parts[len(parts)-1]))
     if err != nil {
@@ -108,6 +117,7 @@ func downloadLikesRecursive(nextMaxLikeId string, urls chan string) {
     }
 
     for _, like := range resp.Likes {
+        urls <- like.Videos.StandardResolution.Url
         urls <- like.Images.StandardResolution.Url
     }
 
